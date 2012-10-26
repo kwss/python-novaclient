@@ -22,15 +22,6 @@ class NoUniqueMatch(Exception):
     pass
 
 
-class AuthSystemNotFound(Exception):
-    """When the user specify a AuthSystem but not installed."""
-    def __init__(self, auth_system):
-        self.auth_system = auth_system
-
-    def __str__(self):
-        return "AuthSystemNotFound: %s" % repr(self.auth_system)
-
-
 class NoTokenLookupException(Exception):
     """This form of authentication does not support looking up
        endpoints from an existing token."""
@@ -49,17 +40,6 @@ class AmbiguousEndpoints(Exception):
 
     def __str__(self):
         return "AmbiguousEndpoints: %s" % repr(self.endpoints)
-
-
-class ConnectionRefused(Exception):
-    """
-    Connection refused: the server refused the connection.
-    """
-    def __init__(self, response=None):
-        self.response = response
-
-    def __str__(self):
-        return "ConnectionRefused: %s" % repr(self.response)
 
 
 class ClientException(Exception):

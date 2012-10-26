@@ -1,0 +1,28 @@
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://persistence.kent.ac.uk">
+  <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
+    <md:KeyDescriptor use="signing">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>MIIDYzCCAsygAwIBAgIJAP2AF44ieFzIMA0GCSqGSIb3DQEBBQUAMH8xCzAJBgNVBAYTAkdCMQ0wCwYDVQQIEwRLZW50MRMwEQYDVQQHEwpDYW50ZXJidXJ5MRswGQYDVQQKExJVbml2ZXJzaXR5IG9mIEtlbnQxCzAJBgNVBAsTAkNTMSIwIAYDVQQDExlpc3NyZy1zaGludGF1Mi5rZW50LmFjLnVrMB4XDTEwMTAyNzEyMzY0NFoXDTIwMTAyNjEyMzY0NFowfzELMAkGA1UEBhMCR0IxDTALBgNVBAgTBEtlbnQxEzARBgNVBAcTCkNhbnRlcmJ1cnkxGzAZBgNVBAoTElVuaXZlcnNpdHkgb2YgS2VudDELMAkGA1UECxMCQ1MxIjAgBgNVBAMTGWlzc3JnLXNoaW50YXUyLmtlbnQuYWMudWswgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJTHOd10ImShxA9qCvoWQRcBzF8ITvI/aji88E12IENYercPTevlpuqpXKH6y/hkzyJ8iCaeUTazVF0nNCvPBenrXCredCwDxSomAkOUFDHp8crk92mbzPES5UMrfChuAeOhH3WJbc0XiMkGcmSk9OwhUy+CaZRLvRHvydkpnmcJAgMBAAGjgeYwgeMwHQYDVR0OBBYEFJsO+76cQq7AskDOd7SbPZCDXN3MMIGzBgNVHSMEgaswgaiAFJsO+76cQq7AskDOd7SbPZCDXN3MoYGEpIGBMH8xCzAJBgNVBAYTAkdCMQ0wCwYDVQQIEwRLZW50MRMwEQYDVQQHEwpDYW50ZXJidXJ5MRswGQYDVQQKExJVbml2ZXJzaXR5IG9mIEtlbnQxCzAJBgNVBAsTAkNTMSIwIAYDVQQDExlpc3NyZy1zaGludGF1Mi5rZW50LmFjLnVrggkA/YAXjiJ4XMgwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAAhtph/gUatIcSL2GfCgKPqvE1fe0DYpCENDTPdl6Ldv70lUtpDcbJoLdBnSd6k6uL4piDnzfDJ3bhIjEW6B0XRPV6MAzevYuLgUqPoWMnHh3TmnUeZN6GnNbLUB83V788ApaGl+SfXg8AiWebVMqq3n87R7sW8h38AMkE4sSdpA==</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:KeyDescriptor use="encryption">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>MIIDYzCCAsygAwIBAgIJAP2AF44ieFzIMA0GCSqGSIb3DQEBBQUAMH8xCzAJBgNVBAYTAkdCMQ0wCwYDVQQIEwRLZW50MRMwEQYDVQQHEwpDYW50ZXJidXJ5MRswGQYDVQQKExJVbml2ZXJzaXR5IG9mIEtlbnQxCzAJBgNVBAsTAkNTMSIwIAYDVQQDExlpc3NyZy1zaGludGF1Mi5rZW50LmFjLnVrMB4XDTEwMTAyNzEyMzY0NFoXDTIwMTAyNjEyMzY0NFowfzELMAkGA1UEBhMCR0IxDTALBgNVBAgTBEtlbnQxEzARBgNVBAcTCkNhbnRlcmJ1cnkxGzAZBgNVBAoTElVuaXZlcnNpdHkgb2YgS2VudDELMAkGA1UECxMCQ1MxIjAgBgNVBAMTGWlzc3JnLXNoaW50YXUyLmtlbnQuYWMudWswgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJTHOd10ImShxA9qCvoWQRcBzF8ITvI/aji88E12IENYercPTevlpuqpXKH6y/hkzyJ8iCaeUTazVF0nNCvPBenrXCredCwDxSomAkOUFDHp8crk92mbzPES5UMrfChuAeOhH3WJbc0XiMkGcmSk9OwhUy+CaZRLvRHvydkpnmcJAgMBAAGjgeYwgeMwHQYDVR0OBBYEFJsO+76cQq7AskDOd7SbPZCDXN3MMIGzBgNVHSMEgaswgaiAFJsO+76cQq7AskDOd7SbPZCDXN3MoYGEpIGBMH8xCzAJBgNVBAYTAkdCMQ0wCwYDVQQIEwRLZW50MRMwEQYDVQQHEwpDYW50ZXJidXJ5MRswGQYDVQQKExJVbml2ZXJzaXR5IG9mIEtlbnQxCzAJBgNVBAsTAkNTMSIwIAYDVQQDExlpc3NyZy1zaGludGF1Mi5rZW50LmFjLnVrggkA/YAXjiJ4XMgwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAAhtph/gUatIcSL2GfCgKPqvE1fe0DYpCENDTPdl6Ldv70lUtpDcbJoLdBnSd6k6uL4piDnzfDJ3bhIjEW6B0XRPV6MAzevYuLgUqPoWMnHh3TmnUeZN6GnNbLUB83V788ApaGl+SfXg8AiWebVMqq3n87R7sW8h38AMkE4sSdpA==</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://persistence.kent.ac.uk/simplesaml/module.php/saml/sp/saml2-logout.php/default-sp"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://persistence.kent.ac.uk/simplesaml/module.php/saml/sp/saml2-acs.php/default-sp" index="0"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:1.0:profiles:browser-post" Location="https://persistence.kent.ac.uk/simplesaml/module.php/saml/sp/saml1-acs.php/default-sp" index="1"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Location="https://persistence.kent.ac.uk/simplesaml/module.php/saml/sp/saml2-acs.php/default-sp" index="2"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:1.0:profiles:artifact-01" Location="https://persistence.kent.ac.uk/simplesaml/module.php/saml/sp/saml1-acs.php/default-sp/artifact" index="3"/>
+  </md:SPSSODescriptor>
+  <md:ContactPerson contactType="technical">
+    <md:GivenName>Kristy</md:GivenName>
+    <md:SurName>Siu</md:SurName>
+    <md:EmailAddress>K.W.S.Siu@kent.ac.uk</md:EmailAddress>
+  </md:ContactPerson>
+</md:EntityDescriptor>

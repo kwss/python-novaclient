@@ -29,8 +29,7 @@ class BootingManagerWithFind(base.ManagerWithFind):
               reservation_id=None, return_raw=False, min_count=None,
               max_count=None, security_groups=None, key_name=None,
               availability_zone=None, block_device_mapping=None, nics=None,
-              scheduler_hints=None, config_drive=None, admin_pass=None,
-              **kwargs):
+              scheduler_hints=None, config_drive=None, **kwargs):
         """
         Create (boot) a new server.
 
@@ -62,7 +61,6 @@ class BootingManagerWithFind(base.ManagerWithFind):
                               specified by the client to help boot an instance.
         :param config_drive: (optional extension) value for config drive
                             either boolean, or volume-id
-        :param admin_pass: admin password for the server.
         """
         body = {"server": {
             "name": name,
@@ -72,8 +70,6 @@ class BootingManagerWithFind(base.ManagerWithFind):
         if userdata:
             if hasattr(userdata, 'read'):
                 userdata = userdata.read()
-            elif isinstance(userdata, unicode):
-                userdata = userdata.encode('utf-8')
             body["server"]["user_data"] = base64.b64encode(userdata)
         if meta:
             body["server"]["metadata"] = meta
@@ -85,8 +81,6 @@ class BootingManagerWithFind(base.ManagerWithFind):
             body['os:scheduler_hints'] = scheduler_hints
         if config_drive:
             body["server"]["config_drive"] = config_drive
-        if admin_pass:
-            body["server"]["adminPass"] = admin_pass
         if not min_count:
             min_count = 1
         if not max_count:
@@ -143,18 +137,15 @@ class BootingManagerWithFind(base.ManagerWithFind):
                     bdm_dict['delete_on_termination'] = mapping_parts[3]
                 bdm.append(bdm_dict)
 
-        if nics is not None:
-            # NOTE(tr3buchet): nics can be an empty list
+        if nics:
             all_net_data = []
             for nic_info in nics:
                 net_data = {}
                 # if value is empty string, do not send value in body
-                if nic_info.get('net-id'):
+                if nic_info['net-id']:
                     net_data['uuid'] = nic_info['net-id']
-                if nic_info.get('v4-fixed-ip'):
+                if nic_info['v4-fixed-ip']:
                     net_data['fixed_ip'] = nic_info['v4-fixed-ip']
-                if nic_info.get('port-id'):
-                    net_data['port'] = nic_info['port-id']
                 all_net_data.append(net_data)
             body['server']['networks'] = all_net_data
 

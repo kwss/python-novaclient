@@ -4,7 +4,6 @@ Flavor interface.
 """
 
 from novaclient import base
-from novaclient import exceptions
 
 
 class Flavor(base.Resource):
@@ -22,50 +21,6 @@ class Flavor(base.Resource):
         Provide a user-friendly accessor to OS-FLV-EXT-DATA:ephemeral
         """
         return self._info.get("OS-FLV-EXT-DATA:ephemeral", 'N/A')
-
-    @property
-    def is_public(self):
-        """
-        Provide a user-friendly accessor to os-flavor-access:is_public
-        """
-        return self._info.get("os-flavor-access:is_public", 'N/A')
-
-    def get_keys(self):
-        """
-        Get extra specs from a flavor.
-
-        :param flavor: The :class:`Flavor` to get extra specs from
-        """
-        _resp, body = self.manager.api.client.get(
-                            "/flavors/%s/os-extra_specs" %
-                            base.getid(self))
-        return body["extra_specs"]
-
-    def set_keys(self, metadata):
-        """
-        Set extra specs on a flavor.
-
-        :param flavor: The :class:`Flavor` to set extra spec on
-        :param metadata: A dict of key/value pairs to be set
-        """
-        body = {'extra_specs': metadata}
-        return self.manager._create(
-                            "/flavors/%s/os-extra_specs" % base.getid(self),
-                            body,
-                            "extra_specs",
-                            return_raw=True)
-
-    def unset_keys(self, keys):
-        """
-        Unset extra specs on a flavor.
-
-        :param flavor: The :class:`Flavor` to unset extra spec on
-        :param keys: A list of keys to be unset
-        """
-        for k in keys:
-            return self.manager._delete(
-                            "/flavors/%s/os-extra_specs/%s" % (
-                            base.getid(self), k))
 
 
 class FlavorManager(base.ManagerWithFind):
@@ -104,7 +59,7 @@ class FlavorManager(base.ManagerWithFind):
         self._delete("/flavors/%s" % base.getid(flavor))
 
     def create(self, name, ram, vcpus, disk, flavorid,
-               ephemeral=0, swap=0, rxtx_factor=1, is_public=True):
+               ephemeral=0, swap=0, rxtx_factor=1):
         """
         Create (allocate) a  floating ip for a tenant
 
@@ -118,41 +73,6 @@ class FlavorManager(base.ManagerWithFind):
         :rtype: :class:`Flavor`
         """
 
-        try:
-            ram = int(ram)
-        except:
-            raise exceptions.CommandError("Ram must be an integer.")
-
-        try:
-            vcpus = int(vcpus)
-        except:
-            raise exceptions.CommandError("VCPUs must be an integer.")
-
-        try:
-            disk = int(disk)
-        except:
-            raise exceptions.CommandError("Disk must be an integer.")
-
-        try:
-            flavorid = int(flavorid)
-        except:
-            raise exceptions.CommandError("Flavor ID must be an integer.")
-
-        try:
-            swap = int(swap)
-        except:
-            raise exceptions.CommandError("Swap must be an integer.")
-
-        try:
-            ephemerel = int(ephemeral)
-        except:
-            raise exceptions.CommandError("Ephemerel must be an integer.")
-
-        try:
-            rxtx_factor = int(rxtx_factor)
-        except:
-            raise exceptions.CommandError("rxtx_factor must be an integer.")
-
         body = {
             "flavor": {
                 "name": name,
@@ -163,7 +83,6 @@ class FlavorManager(base.ManagerWithFind):
                 "swap": int(swap),
                 "OS-FLV-EXT-DATA:ephemeral": int(ephemeral),
                 "rxtx_factor": int(rxtx_factor),
-                "os-flavor-access:is_public": bool(is_public),
             }
         }
 

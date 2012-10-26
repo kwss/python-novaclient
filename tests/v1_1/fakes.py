@@ -25,8 +25,7 @@ class FakeClient(fakes.FakeClient, client.Client):
 
     def __init__(self, *args, **kwargs):
         client.Client.__init__(self, 'username', 'password',
-                               'project_id', 'auth_url',
-                               extensions=kwargs.get('extensions'))
+                               'project_id', 'auth_url')
         self.client = FakeHTTPClient(**kwargs)
 
 
@@ -67,53 +66,6 @@ class FakeHTTPClient(base_client.HTTPClient):
             return httplib2.Response(status), body
         else:
             return httplib2.Response({"status": status}), body
-
-    #
-    # List all extensions
-    #
-
-    def get_extensions(self, **kw):
-        exts = [
-            {
-                "alias": "NMN",
-                "description": "Multiple network support",
-                "links": [],
-                "name": "Multinic",
-                "namespace": ("http://docs.openstack.org/"
-                              "compute/ext/multinic/api/v1.1"),
-                "updated": "2011-06-09T00:00:00+00:00"
-            },
-            {
-                "alias": "OS-DCF",
-                "description": "Disk Management Extension",
-                "links": [],
-                "name": "DiskConfig",
-                "namespace": ("http://docs.openstack.org/"
-                              "compute/ext/disk_config/api/v1.1"),
-                "updated": "2011-09-27T00:00:00+00:00"
-            },
-            {
-                "alias": "OS-EXT-SRV-ATTR",
-                "description": "Extended Server Attributes support.",
-                "links": [],
-                "name": "ExtendedServerAttributes",
-                "namespace": ("http://docs.openstack.org/"
-                              "compute/ext/extended_status/api/v1.1"),
-                "updated": "2011-11-03T00:00:00+00:00"
-            },
-            {
-                "alias": "OS-EXT-STS",
-                "description": "Extended Status support",
-                "links": [],
-                "name": "ExtendedStatus",
-                "namespace": ("http://docs.openstack.org/"
-                              "compute/ext/extended_status/api/v1.1"),
-                "updated": "2011-11-03T00:00:00+00:00"
-            },
-        ]
-        return (200, {
-            "extensions": exts,
-        })
 
     #
     # Limits
@@ -393,10 +345,6 @@ class FakeHTTPClient(base_client.HTTPClient):
             assert body[action].keys() == ['name']
         elif action == 'removeSecurityGroup':
             assert body[action].keys() == ['name']
-        elif action == 'createBackup':
-            assert set(body[action].keys()) == set(['name',
-                                                    'backup_type',
-                                                    'rotation'])
         else:
             raise AssertionError("Unexpected server action: %s" % action)
         return (resp, _body)
@@ -427,11 +375,9 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {'flavors': [
             {'id': 1, 'name': '256 MB Server', 'ram': 256, 'disk': 10,
              'OS-FLV-EXT-DATA:ephemeral': 10,
-             'os-flavor-access:is_public': True,
              'links': {}},
             {'id': 2, 'name': '512 MB Server', 'ram': 512, 'disk': 20,
              'OS-FLV-EXT-DATA:ephemeral': 20,
-             'os-flavor-access:is_public': False,
              'links': {}},
         ]})
 
@@ -451,40 +397,6 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def post_flavors(self, body, **kw):
         return (202, {'flavor': self.get_flavors_detail()[1]['flavors'][0]})
-
-    def get_flavors_1_os_extra_specs(self, **kw):
-        return (200,
-            {'extra_specs': {"k1": "v1"}})
-
-    def get_flavors_2_os_extra_specs(self, **kw):
-        return (200,
-            {'extra_specs': {"k2": "v2"}})
-
-    def post_flavors_1_os_extra_specs(self, body, **kw):
-        assert body.keys() == ['extra_specs']
-        fakes.assert_has_keys(body['extra_specs'],
-                              required=['k1'])
-        return (200,
-            {'extra_specs': {"k1": "v1"}})
-
-    def delete_flavors_1_os_extra_specs_k1(self, **kw):
-        return (204, None)
-
-    #
-    # Flavor access
-    #
-
-    def get_flavors_1_os_flavor_access(self, **kw):
-        return (404, None)
-
-    def get_flavors_2_os_flavor_access(self, **kw):
-        return (200, {'flavor_access': [
-            {'flavor_id': '2', 'tenant_id': 'proj1'},
-            {'flavor_id': '2', 'tenant_id': 'proj2'}
-        ]})
-
-    def post_flavors_2_action(self, body, **kw):
-        return (202, self.get_flavors_2_os_flavor_access()[1])
 
     #
     # Floating ips
@@ -1022,21 +934,3 @@ class FakeHTTPClient(base_client.HTTPClient):
                           {'id': 1234,
                            'hypervisor_hostname': "hyper1",
                            'uptime': "fake uptime"}})
-
-    def get_os_networks(self, **kw):
-        return (200, {'networks': [{"label": "1", "cidr": "10.0.0.0/24"}]})
-
-    def get_os_networks_1(self, **kw):
-        return (200, {'network': {"label": "1", "cidr": "10.0.0.0/24"}})
-
-    def post_os_networks(self, **kw):
-        return (202, {'network': kw})
-
-    def delete_os_networks_networkdelete(self, **kw):
-        return (202, None)
-
-    def post_os_networks_add(self, **kw):
-        return (202, None)
-
-    def post_os_networks_networkdisassociate_action(self, **kw):
-        return (202, None)

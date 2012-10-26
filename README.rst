@@ -40,14 +40,14 @@ Installing this package gets you a shell command, ``nova``, that you
 can use to interact with any Rackspace compatible API (including OpenStack).
 
 You'll need to provide your OpenStack username and password. You can do this
-with the ``--os-username``, ``--os-password`` and  ``--os-tenant-name``
+with the ``--os_username``, ``--os_password`` and  ``--os_tenant_name``
 params, but it's easier to just set them as environment variables::
 
     export OS_USERNAME=openstack
     export OS_PASSWORD=yadayada
     export OS_TENANT_NAME=myproject
 
-You will also need to define the authentication url with ``--os-auth-url``
+You will also need to define the authentication url with ``--os_auth_url``
 and the version of the API with ``--version``.  Or set them as an environment
 variables as well::
 
@@ -60,21 +60,19 @@ endpoint::
     export OS_AUTH_URL=http://example.com:5000/v2.0/
 
 Since Keystone can return multiple regions in the Service Catalog, you
-can specify the one you want with ``--os-region-name`` (or
+can specify the one you want with ``--os_region_name`` (or
 ``export OS_REGION_NAME``). It defaults to the first in the list returned.
 
 You'll find complete documentation on the shell by running
 ``nova help``::
 
-    usage: nova [--debug] [--no-cache] [--timings]
-                [--os-username <auth-user-name>] [--os-password <auth-password>]
-                [--os-tenant-name <auth-tenant-name>] [--os-auth-url <auth-url>]
-                [--os-region-name <region-name>] [--os-auth-system <auth-system>]
-                [--service-type <service-type>] [--service-name <service-name>]
-                [--volume-service-name <volume-service-type>]
-                [--endpoint-type <endpoint-type>]
-                [--os-compute-api-version <compute-api-ver>] [--insecure]
-                [--bypass-url <bypass-url>]
+    usage: nova [--debug] [--os_username OS_USERNAME] [--os_password OS_PASSWORD]
+                [--os_tenant_name OS_TENANT_NAME] [--os_auth_url OS_AUTH_URL]
+                [--os_region_name OS_REGION_NAME] [--service_type SERVICE_TYPE]
+                [--service_name SERVICE_NAME] [--endpoint_type ENDPOINT_TYPE]
+                [--version VERSION] [--username USERNAME]
+                [--region_name REGION_NAME] [--apikey APIKEY]
+                [--projectid PROJECTID] [--url URL]
                 <subcommand> ...
 
     Command-line interface to the OpenStack Nova API.
@@ -201,36 +199,33 @@ You'll find complete documentation on the shell by running
 
     Optional arguments:
       --debug               Print debugging output
-      --no-cache            Don't use the auth token cache.
-      --timings             Print call timing info
-      --os-username <auth-user-name>
+      --os_username OS_USERNAME
                             Defaults to env[OS_USERNAME].
-      --os-password <auth-password>
+      --os_password OS_PASSWORD
                             Defaults to env[OS_PASSWORD].
-      --os-tenant-name <auth-tenant-name>
+      --os_tenant_name OS_TENANT_NAME
                             Defaults to env[OS_TENANT_NAME].
-      --os-auth-url <auth-url>
+      --os_auth_url OS_AUTH_URL
                             Defaults to env[OS_AUTH_URL].
-      --os-region-name <region-name>
+      --os_region_name OS_REGION_NAME
                             Defaults to env[OS_REGION_NAME].
-      --os-auth-system <auth-system>
-                            Defaults to env[OS_AUTH_SYSTEM].
-      --service-type <service-type>
+      --service_type SERVICE_TYPE
                             Defaults to compute for most actions
-      --service-name <service-name>
+      --service_name SERVICE_NAME
                             Defaults to env[NOVA_SERVICE_NAME]
-      --volume-service-name <volume-service-type>
-                            Defaults to env[NOVA_VOLUME_SERVICE_NAME]
-      --endpoint-type <endpoint-type>
+      --endpoint_type ENDPOINT_TYPE
                             Defaults to env[NOVA_ENDPOINT_TYPE] or publicURL.
-      --os-compute-api-version <compute-api-ver>
-                            Accepts 1.1, defaults to env[OS_COMPUTE_API_VERSION].      --username USERNAME   Deprecated
-      --insecure            Explicitly allow novaclient to perform "insecure" SSL
-                            (https) requests. The server's certificate will not be
-                            verified against any certificate authorities. This
-                            option should be used with caution.
-      --bypass-url <bypass-url>
-                            Use this API endpoint instead of the Service Catalog
+      --os_compute_api_version VERSION
+                            Accepts 1.1, defaults to env[OS_COMPUTE_API_VERSION].
+      --username USERNAME   Deprecated
+      --region_name REGION_NAME
+                            Deprecated
+      --apikey APIKEY, --password APIKEY
+                            Deprecated
+      --projectid PROJECTID, --tenant_name PROJECTID
+                            Deprecated
+      --url URL, --auth_url URL
+                            Deprecated
 
     See "nova help COMMAND" for help on a specific command.
 

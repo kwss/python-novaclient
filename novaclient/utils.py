@@ -42,17 +42,6 @@ def add_arg(f, *args, **kwargs):
         f.arguments.insert(0, (args, kwargs))
 
 
-def bool_from_str(val):
-    """Convert a string representation of a bool into a bool value"""
-
-    if not val:
-        return False
-    try:
-        return True if bool(int(val)) else False
-    except ValueError:
-        return val.lower() in ['true', 'yes', 'y']
-
-
 def add_resource_manager_extra_kwargs_hook(f, hook):
     """Adds hook to bind CLI arguments to ResourceManager calls.
 
@@ -191,14 +180,15 @@ def find_resource(manager, name_or_id):
 
         # finally try to find entity by name
         try:
-            resource = getattr(manager, 'resource_class', None)
-            name_attr = resource.NAME_ATTR if resource else 'name'
-            kwargs = {name_attr: name_or_id}
-            return manager.find(**kwargs)
+            return manager.find(name=name_or_id)
         except exceptions.NotFound:
-            msg = "No %s with a name or ID of '%s' exists." % \
-                (manager.resource_class.__name__.lower(), name_or_id)
-            raise exceptions.CommandError(msg)
+            try:
+                # Volumes does not have name, but display_name
+                return manager.find(display_name=name_or_id)
+            except exceptions.NotFound:
+                msg = "No %s with a name or ID of '%s' exists." % \
+                    (manager.resource_class.__name__.lower(), name_or_id)
+                raise exceptions.CommandError(msg)
     except exceptions.NoUniqueMatch:
         msg = ("Multiple %s matches found for '%s', use an ID to be more"
                " specific." % (manager.resource_class.__name__.lower(),

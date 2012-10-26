@@ -34,12 +34,12 @@ setuptools.setup(
     url="https://github.com/openstack/python-novaclient",
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
     install_requires=setup.parse_requirements(),
+    data_files=[('novaclient/contrib/federated/config',['federated.cfg']),('novaclient/contrib/federated/certs',['certs/server.key', 'certs/server.crt'])],
     test_suite="nose.collector",
     cmdclass=setup.get_cmdclass(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
-        "Environment :: OpenStack",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "License :: OSI Approved :: Apache Software License",
@@ -48,6 +48,5 @@ setuptools.setup(
     ],
     entry_points={
         "console_scripts": ["nova = novaclient.shell:main"]
-    },
-    data_files=[('novaclient', ['novaclient/versioninfo'])]
+    }
 )

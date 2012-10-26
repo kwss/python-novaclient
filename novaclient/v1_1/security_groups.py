@@ -17,8 +17,6 @@
 Security group interface (1.1 extension).
 """
 
-import urllib
-
 from novaclient import base
 
 
@@ -63,17 +61,10 @@ class SecurityGroupManager(base.ManagerWithFind):
         return self._get('/os-security-groups/%s' % group_id,
                          'security_group')
 
-    def list(self, search_opts=None):
+    def list(self):
         """
         Get a list of all security_groups
 
         :rtype: list of :class:`SecurityGroup`
         """
-        search_opts = search_opts or {}
-
-        qparams = dict((k, v) for (k, v) in search_opts.iteritems() if v)
-
-        query_string = '?%s' % urllib.urlencode(qparams) if qparams else ''
-
-        return self._list('/os-security-groups%s' % query_string,
-                          'security_groups')
+        return self._list("/os-security-groups", "security_groups")

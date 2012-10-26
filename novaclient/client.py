@@ -7,18 +7,7 @@
 OpenStack Client interface. Handles the REST calls and responses.
 """
 
-import logging
-import os
-import time
-import urlparse
-
 import httplib2
-import pkg_resources
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 has_keyring = False
 try:
@@ -26,6 +15,16 @@ try:
     has_keyring = True
 except ImportError:
     pass
+
+import logging
+import os
+import time
+import urlparse
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 # Python 2.5 compat fix
 if not hasattr(urlparse, 'parse_qsl'):
@@ -36,67 +35,24 @@ from novaclient import exceptions
 from novaclient import service_catalog
 from novaclient import utils
 
-
-def get_auth_system_url(auth_system):
-    """Load plugin-based auth_url"""
-    ep_name = 'openstack.client.auth_url'
-    for ep in pkg_resources.iter_entry_points(ep_name):
-        if ep.name == auth_system:
-            return ep.load()()
-    raise exceptions.AuthSystemNotFound(auth_system)
-
-
-def _get_proxy_info():
-    """Work around httplib2 proxying bug.
-
-    Full details of the bug here:
-
-      http://code.google.com/p/httplib2/issues/detail?id=228
-
-    Basically, in the case of plain old http with httplib2>=0.7.5 we
-    want to ensure that PROXY_TYPE_HTTP_NO_TUNNEL is used.
-    """
-    def get_proxy_info(method):
-        pi = httplib2.ProxyInfo.from_environment(method)
-        if pi is None or method != 'http':
-            return pi
-
-        # We can't rely on httplib2.socks being available
-        # PROXY_TYPE_HTTP_NO_TUNNEL was introduced in 0.7.5
-        if not (hasattr(httplib2, 'socks') and
-                hasattr(httplib2.socks, 'PROXY_TYPE_HTTP_NO_TUNNEL')):
-            return pi
-
-        pi.proxy_type = httplib2.socks.PROXY_TYPE_HTTP_NO_TUNNEL
-        return pi
-
-    # 0.7.3 introduced configuring proxy from the environment
-    if not hasattr(httplib2.ProxyInfo, 'from_environment'):
-        return None
-
-    return get_proxy_info
-
+from novaclient.contrib.federated import federated
+from novaclient.contrib.federated import federated_exceptions as fe
 
 class HTTPClient(httplib2.Http):
 
     USER_AGENT = 'python-novaclient'
 
-    def __init__(self, user, password, projectid, auth_url=None,
-                 insecure=False, timeout=None, proxy_tenant_id=None,
+    def __init__(self, user, password, projectid, auth_url, insecure=False,
+                 timeout=None, proxy_tenant_id=None,
                  proxy_token=None, region_name=None,
                  endpoint_type='publicURL', service_type=None,
                  service_name=None, volume_service_name=None,
                  timings=False, bypass_url=None, no_cache=False,
-                 http_log_debug=False, auth_system='keystone'):
-        super(HTTPClient, self).__init__(timeout=timeout,
-                                         proxy_info=_get_proxy_info())
+                 http_log_debug=False, federated=False, realm=None):
+        super(HTTPClient, self).__init__(timeout=timeout)
         self.user = user
         self.password = password
         self.projectid = projectid
-        if not auth_url and auth_system and auth_system != 'keystone':
-            auth_url = get_auth_system_url(auth_system)
-            if not auth_url:
-                raise exceptions.EndpointNotFound()
         self.auth_url = auth_url.rstrip('/')
         self.version = 'v1.1'
         self.region_name = region_name
@@ -108,6 +64,8 @@ class HTTPClient(httplib2.Http):
         self.bypass_url = bypass_url
         self.no_cache = no_cache
         self.http_log_debug = http_log_debug
+        self.federated = federated
+        self.realm = realm
 
         self.times = []  # [("item", starttime, endtime), ...]
 
@@ -120,8 +78,6 @@ class HTTPClient(httplib2.Http):
         # httplib2 overrides
         self.force_exception_to_status_code = True
         self.disable_ssl_certificate_validation = insecure
-
-        self.auth_system = auth_system
 
         self._logger = logging.getLogger(__name__)
         if self.http_log_debug:
@@ -148,13 +104,13 @@ class HTTPClient(httplib2.Http):
     def reset_timings(self):
         self.times = []
 
-    def http_log_req(self, args, kwargs):
+    def http_log(self, args, kwargs, resp, body):
         if not self.http_log_debug:
             return
 
         string_parts = ['curl -i']
         for element in args:
-            if element in ('GET', 'POST', 'DELETE', 'PUT'):
+            if element in ('GET', 'POST'):
                 string_parts.append(' -X %s' % element)
             else:
                 string_parts.append(' %s' % element)
@@ -163,13 +119,9 @@ class HTTPClient(httplib2.Http):
             header = ' -H "%s: %s"' % (element, kwargs['headers'][element])
             string_parts.append(header)
 
-        if 'body' in kwargs:
-            string_parts.append(" -d '%s'" % (kwargs['body']))
         self._logger.debug("\nREQ: %s\n" % "".join(string_parts))
-
-    def http_log_resp(self, resp, body):
-        if not self.http_log_debug:
-            return
+        if 'body' in kwargs:
+            self._logger.debug("REQ BODY: %s\n" % (kwargs['body']))
         self._logger.debug("RESP:%s %s\n", resp, body)
 
     def request(self, *args, **kwargs):
@@ -179,20 +131,10 @@ class HTTPClient(httplib2.Http):
         if 'body' in kwargs:
             kwargs['headers']['Content-Type'] = 'application/json'
             kwargs['body'] = json.dumps(kwargs['body'])
-
-        self.http_log_req(args, kwargs)
         resp, body = super(HTTPClient, self).request(*args, **kwargs)
-        self.http_log_resp(resp, body)
+        self.http_log(args, kwargs, resp, body)
 
         if body:
-            # NOTE(alaski): Because force_exceptions_to_status_code=True
-            # httplib2 returns a connection refused event as a 400 response.
-            # To determine if it is a bad request or refused connection we need
-            # to check the body.  httplib2 tests check for 'Connection refused'
-            # or 'actively refused' in the body, so that's what we'll do.
-            if resp.status == 400:
-                if 'Connection refused' in body or 'actively refused' in body:
-                    raise exceptions.ConnectionRefused(body)
             try:
                 body = json.loads(body)
             except ValueError:
@@ -223,14 +165,12 @@ class HTTPClient(httplib2.Http):
             kwargs.setdefault('headers', {})['X-Auth-Token'] = self.auth_token
             if self.projectid:
                 kwargs['headers']['X-Auth-Project-Id'] = self.projectid
-
             resp, body = self._time_request(self.management_url + url, method,
-                                            **kwargs)
+                                      **kwargs)
             return resp, body
         except exceptions.Unauthorized, ex:
             try:
                 self.authenticate()
-                kwargs['headers']['X-Auth-Token'] = self.auth_token
                 resp, body = self._time_request(self.management_url + url,
                                                 method, **kwargs)
                 return resp, body
@@ -259,16 +199,17 @@ class HTTPClient(httplib2.Http):
                 self.auth_url = url
                 self.service_catalog = \
                     service_catalog.ServiceCatalog(body)
+
                 if extract_token:
                     self.auth_token = self.service_catalog.get_token()
 
                 management_url = self.service_catalog.url_for(
-                    attr='region',
-                    filter_value=self.region_name,
-                    endpoint_type=self.endpoint_type,
-                    service_type=self.service_type,
-                    service_name=self.service_name,
-                    volume_service_name=self.volume_service_name,)
+                               attr='region',
+                               filter_value=self.region_name,
+                               endpoint_type=self.endpoint_type,
+                               service_type=self.service_type,
+                               service_name=self.service_name,
+                               volume_service_name=self.volume_service_name,)
                 self.management_url = management_url.rstrip('/')
                 return None
             except exceptions.AmbiguousEndpoints:
@@ -302,8 +243,8 @@ class HTTPClient(httplib2.Http):
         url = '/'.join([url, 'tokens', '%s?belongsTo=%s'
                         % (self.proxy_token, self.proxy_tenant_id)])
         self._logger.debug("Using Endpoint URL: %s" % url)
-        resp, body = self._time_request(
-            url, "GET", headers={'X-Auth_Token': self.auth_token})
+        resp, body = self._time_request(url, "GET",
+                                  headers={'X-Auth_Token': self.auth_token})
         return self._extract_service_catalog(url, resp, body,
                                              extract_token=False)
 
@@ -346,22 +287,17 @@ class HTTPClient(httplib2.Http):
         # Ideally this is going to have to be provided by the service catalog.
         new_netloc = netloc.replace(':%d' % port, ':%d' % (35357,))
         admin_url = urlparse.urlunsplit(
-            (scheme, new_netloc, path, query, frag))
-
-        # FIXME(chmouel): This is to handle backward compatibiliy when
-        # we didn't have a plugin mechanism for the auth_system. This
-        # should be removed in the future and have people move to
-        # OS_AUTH_SYSTEM=rackspace instead.
-        if "NOVA_RAX_AUTH" in os.environ:
-            self.auth_system = "rackspace"
+                        (scheme, new_netloc, path, query, frag))
 
         auth_url = self.auth_url
-        if self.version == "v2.0":  # FIXME(chris): This should be better.
+        if self.federated:
+            auth_url = self._federated_auth(auth_url)
+        elif self.version == "v2.0":  # FIXME(chris): This should be better.
             while auth_url:
-                if not self.auth_system or self.auth_system == 'keystone':
-                    auth_url = self._v2_auth(auth_url)
+                if "NOVA_RAX_AUTH" in os.environ:
+                    auth_url = self._rax_auth(auth_url)
                 else:
-                    auth_url = self._plugin_auth(auth_url)
+                    auth_url = self._v2_auth(auth_url)
 
             # Are we acting on behalf of another user via an
             # existing token? If so, our actual endpoints may
@@ -420,24 +356,33 @@ class HTTPClient(httplib2.Http):
         else:
             raise exceptions.from_response(resp, body)
 
-    def _plugin_auth(self, auth_url):
-        """Load plugin-based authentication"""
-        ep_name = 'openstack.client.authenticate'
-        for ep in pkg_resources.iter_entry_points(ep_name):
-            if ep.name == self.auth_system:
-                return ep.load()(self, auth_url)
-        raise exceptions.AuthSystemNotFound(self.auth_system)
-
     def _v2_auth(self, url):
         """Authenticate against a v2.0 auth service."""
         body = {"auth": {
-                "passwordCredentials": {"username": self.user,
-                                        "password": self.password}}}
+                   "passwordCredentials": {"username": self.user,
+                                           "password": self.password}}}
 
         if self.projectid:
             body['auth']['tenantName'] = self.projectid
 
         self._authenticate(url, body)
+
+    def _rax_auth(self, url):
+        """Authenticate against the Rackspace auth service."""
+        body = {"auth": {
+                "RAX-KSKEY:apiKeyCredentials": {
+                        "username": self.user,
+                        "apiKey": self.password,
+                        "tenantName": self.projectid}}}
+
+        self._authenticate(url, body)
+
+    def _federated_auth(self, url):
+        class _ResponseHeader():
+            status = 200
+        resp = _ResponseHeader()
+        body = federated.federatedAuthentication(url, self.realm, self.projectid)
+        self._extract_service_catalog(url, resp, body)
 
     def _authenticate(self, url, body):
         """Authenticate and extract the service catalog."""
@@ -453,7 +398,6 @@ class HTTPClient(httplib2.Http):
             self.follow_all_redirects = tmp_follow_all_redirects
 
         return self._extract_service_catalog(url, resp, body)
-
 
 def get_client_class(version):
     version_map = {

@@ -23,13 +23,11 @@ from novaclient import base
 
 
 class Hypervisor(base.Resource):
-    NAME_ATTR = 'hypervisor_hostname'
-
     def __repr__(self):
         return "<Hypervisor: %s>" % self.id
 
 
-class HypervisorManager(base.ManagerWithFind):
+class HypervisorManager(base.Manager):
     resource_class = Hypervisor
 
     def list(self, detailed=True):

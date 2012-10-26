@@ -17,8 +17,6 @@
 Volume interface (1.1 extension).
 """
 
-import urllib
-
 from novaclient import base
 
 
@@ -26,8 +24,6 @@ class Volume(base.Resource):
     """
     A volume is an extra block level storage to the OpenStack instances.
     """
-    NAME_ATTR = 'display_name'
-
     def __repr__(self):
         return "<Volume: %s>" % self.id
 
@@ -46,8 +42,7 @@ class VolumeManager(base.ManagerWithFind):
 
     def create(self, size, snapshot_id=None,
                     display_name=None, display_description=None,
-                    volume_type=None, availability_zone=None,
-                    imageRef=None):
+                    volume_type=None):
         """
         Create a volume.
 
@@ -56,17 +51,13 @@ class VolumeManager(base.ManagerWithFind):
         :param display_name: Name of the volume
         :param display_description: Description of the volume
         :param volume_type: Type of volume
-        :param availability_zone: Availability Zone for volume
         :rtype: :class:`Volume`
-        :param imageRef: reference to an image stored in glance
         """
         body = {'volume': {'size': size,
                             'snapshot_id': snapshot_id,
                             'display_name': display_name,
                             'display_description': display_description,
-                            'volume_type': volume_type,
-                            'availability_zone': availability_zone,
-                            'imageRef': imageRef}}
+                            'volume_type': volume_type}}
         return self._create('/volumes', body, 'volume')
 
     def get(self, volume_id):
@@ -78,22 +69,16 @@ class VolumeManager(base.ManagerWithFind):
         """
         return self._get("/volumes/%s" % volume_id, "volume")
 
-    def list(self, detailed=True, search_opts=None):
+    def list(self, detailed=True):
         """
         Get a list of all volumes.
 
         :rtype: list of :class:`Volume`
         """
-        search_opts = search_opts or {}
-
-        qparams = dict((k, v) for (k, v) in search_opts.iteritems() if v)
-
-        query_string = '?%s' % urllib.urlencode(qparams) if qparams else ''
-
         if detailed is True:
-            return self._list("/volumes/detail%s" % query_string, "volumes")
+            return self._list("/volumes/detail", "volumes")
         else:
-            return self._list("/volumes%s" % query_string, "volumes")
+            return self._list("/volumes", "volumes")
 
     def delete(self, volume):
         """

@@ -63,7 +63,7 @@ class Manager(utils.HookableMixin):
 
         if obj_class is None:
             obj_class = self.resource_class
-
+            
         data = body[response_key]
         # NOTE(ja): keystone returns values as list as {'values': [ ... ]}
         #           unlike other services which just return the list...
@@ -281,7 +281,6 @@ class Resource(object):
     :param loaded: prevent lazy-loading if set to True
     """
     HUMAN_ID = False
-    NAME_ATTR = 'name'
 
     def __init__(self, manager, info, loaded=False):
         self.manager = manager
@@ -304,8 +303,8 @@ class Resource(object):
         """Subclasses may override this provide a pretty ID which can be used
         for bash completion.
         """
-        if self.NAME_ATTR in self.__dict__ and self.HUMAN_ID:
-            return utils.slugify(getattr(self, self.NAME_ATTR))
+        if 'name' in self.__dict__ and self.HUMAN_ID:
+            return utils.slugify(self.name)
         return None
 
     def _add_details(self, info):

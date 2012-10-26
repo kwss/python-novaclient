@@ -15,7 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
 import os
 import mock
 import sys
@@ -24,7 +23,6 @@ import tempfile
 import novaclient.shell
 import novaclient.client
 from novaclient import exceptions
-from novaclient.openstack.common import timeutils
 from tests.v1_1 import fakes
 from tests import utils
 
@@ -61,8 +59,6 @@ class ShellTest(utils.TestCase):
         #HACK(bcwaldon): replace this when we start using stubs
         novaclient.client.get_client_class = self.old_get_client_class
 
-        timeutils.clear_time_override()
-
     def run_command(self, cmd):
         self.shell.main(cmd.split())
 
@@ -82,7 +78,6 @@ class ShellTest(utils.TestCase):
                 'imageRef': '1',
                 'min_count': 1,
                 'max_count': 1,
-                'networks': [],
                 }},
         )
 
@@ -98,7 +93,6 @@ class ShellTest(utils.TestCase):
                 'metadata': {'foo': 'bar=pants', 'spam': 'eggs'},
                 'min_count': 1,
                 'max_count': 1,
-                'networks': [],
             }},
         )
 
@@ -113,7 +107,6 @@ class ShellTest(utils.TestCase):
                     'imageRef': '1',
                     'min_count': 1,
                     'max_count': 1,
-                    'networks': [],
                 },
                 'os:scheduler_hints': {'a': 'b=c'},
             },
@@ -155,7 +148,6 @@ class ShellTest(utils.TestCase):
                 'imageRef': '1',
                 'min_count': 1,
                 'max_count': 1,
-                'networks': [],
                 'personality': [
                    {'path': '/tmp/bar', 'contents': expected_file_data},
                    {'path': '/tmp/foo', 'contents': expected_file_data},
@@ -171,12 +163,11 @@ class ShellTest(utils.TestCase):
 
     def test_flavor_list(self):
         self.run_command('flavor-list')
-        self.assert_called('GET', '/flavors/2/os-extra_specs')
         self.assert_called_anytime('GET', '/flavors/detail')
 
     def test_flavor_show(self):
         self.run_command('flavor-show 1')
-        self.assert_called_anytime('GET', '/flavors/1')
+        self.assert_called('GET', '/flavors/1')
 
     def test_image_show(self):
         self.run_command('image-show 1')
@@ -238,7 +229,7 @@ class ShellTest(utils.TestCase):
         #                   {'rebuild': {'imageRef': 1}})
         self.assert_called('GET', '/images/2')
 
-        self.run_command('rebuild sample-server 1 --rebuild-password asdf')
+        self.run_command('rebuild sample-server 1 --rebuild_password asdf')
         # XXX need a way to test multiple calls
         #self.assert_called('POST', '/servers/1234/action',
         #                   {'rebuild': {'imageRef': 1, 'adminPass': 'asdf'}})
@@ -329,7 +320,7 @@ class ShellTest(utils.TestCase):
 
     def test_dns_create_private_domain(self):
         self.run_command('dns-create-private-domain testdomain '
-                         '--availability-zone av_zone')
+                         '--availability_zone av_zone')
         self.assert_called('PUT', '/os-floating-ip-dns/testdomain')
 
     def test_dns_delete(self):
@@ -362,26 +353,29 @@ class ShellTest(utils.TestCase):
                            'end=2005-02-01T00:00:00&' +
                            'detailed=1')
 
-    def test_usage_list_no_args(self):
-        timeutils.set_time_override(datetime.datetime(2005, 2, 1, 0, 0))
-        self.run_command('usage-list')
-        self.assert_called('GET',
-                           '/os-simple-tenant-usage?' +
-                           'start=2005-01-04T00:00:00&' +
-                           'end=2005-02-02T00:00:00&' +
-                           'detailed=1')
-
     def test_flavor_delete(self):
         self.run_command("flavor-delete flavordelete")
         self.assert_called('DELETE', '/flavors/flavordelete')
 
     def test_flavor_create(self):
         self.run_command("flavor-create flavorcreate "
-                         "1234 512 10 1 --swap 1024 --ephemeral 10 "
-                         "--is-public true")
-        self.assert_called('POST', '/flavors', pos=-3)
-        self.assert_called('GET', '/flavors/1', pos=-2)
-        self.assert_called('GET', '/flavors/1/os-extra_specs', pos=-1)
+                         "1234 512 10 1 --swap 1024 --ephemeral 10")
+
+        body = {
+            "flavor": {
+                "name": "flavorcreate",
+                "ram": 512,
+                "vcpus": 1,
+                "disk": 10,
+                "OS-FLV-EXT-DATA:ephemeral": 10,
+                "id": 1234,
+                "swap": 1024,
+                "rxtx_factor": 1,
+            }
+        }
+
+        self.assert_called('POST', '/flavors', body, pos=-2)
+        self.assert_called('GET', '/flavors/1')
 
     def test_aggregate_list(self):
         self.run_command('aggregate-list')
@@ -434,13 +428,13 @@ class ShellTest(utils.TestCase):
                                             'block_migration': False,
                                             'disk_over_commit': False}})
         self.run_command('live-migration sample-server hostname \
-                         --block-migrate')
+                         --block_migrate')
         self.assert_called('POST', '/servers/1234/action',
                            {'os-migrateLive': {'host': 'hostname',
                                             'block_migration': True,
                                             'disk_over_commit': False}})
         self.run_command('live-migration sample-server hostname \
-                         --block-migrate --disk-over-commit')
+                         --block_migrate --disk_over_commit')
         self.assert_called('POST', '/servers/1234/action',
                            {'os-migrateLive': {'host': 'hostname',
                                             'block_migration': True,
@@ -525,23 +519,3 @@ class ShellTest(utils.TestCase):
     def test_quota_class_update(self):
         self.run_command('quota-class-update test --instances=5')
         self.assert_called('PUT', '/os-quota-class-sets/test')
-
-    def test_network_list(self):
-        self.run_command('network-list')
-        self.assert_called('GET', '/os-networks')
-
-    def test_network_show(self):
-        self.run_command('network-show 1')
-        self.assert_called('GET', '/os-networks/1')
-
-    def test_backup(self):
-        self.run_command('backup sample-server back1 daily 1')
-        self.assert_called('POST', '/servers/1234/action',
-                           {'createBackup': {'name': 'back1',
-                                             'backup_type': 'daily',
-                                             'rotation': '1'}})
-        self.run_command('backup 1234 back1 daily 1')
-        self.assert_called('POST', '/servers/1234/action',
-                           {'createBackup': {'name': 'back1',
-                                             'backup_type': 'daily',
-                                             'rotation': '1'}})

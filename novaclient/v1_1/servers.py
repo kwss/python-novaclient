@@ -83,9 +83,9 @@ class Server(base.Resource):
 
     def remove_floating_ip(self, address):
         """
-        Remove floating IP from an instance
+        Add floating IP to an instance
 
-        :param address: The ip address or FloatingIP to remove
+        :param address: The ip address or FloatingIP to add to remove
         """
         self.manager.remove_floating_ip(self, address)
 
@@ -216,17 +216,6 @@ class Server(base.Resource):
         :param metadata: Metadata to assign to the image.
         """
         self.manager.create_image(self, image_name, metadata)
-
-    def backup(self, backup_name, backup_type, rotation):
-        """
-        Backup a server instance.
-
-        :param backup_name: Name of the backup image
-        :param backup_type: The backup type, like 'daily' or 'weekly'
-        :param rotation: Int parameter representing how many backups to
-                        keep around.
-        """
-        self.manager.backup(self, backup_name, backup_type, rotation)
 
     def confirm_resize(self):
         """
@@ -474,7 +463,7 @@ class ServerManager(local_base.BootingManagerWithFind):
                       device mappings for this server.
         :param nics:  (optional extension) an ordered list of nics to be
                       added to this server, with information about
-                      connected networks, fixed ips, port etc.
+                      connected networks, fixed ips, etc.
         :param scheduler_hints: (optional extension) arbitrary key-value pairs
                             specified by the client to help boot an instance
         :param config_drive: (optional extension) value for config drive
@@ -613,21 +602,6 @@ class ServerManager(local_base.BootingManagerWithFind):
         location = self._action('createImage', server, body)[0]['location']
         image_uuid = location.split('/')[-1]
         return image_uuid
-
-    def backup(self, server, backup_name, backup_type, rotation):
-        """
-        Backup a server instance.
-
-        :param server: The :class:`Server` (or its ID) to share onto.
-        :param backup_name: Name of the backup image
-        :param backup_type: The backup type, like 'daily' or 'weekly'
-        :param rotation: Int parameter representing how many backups to
-                        keep around.
-        """
-        body = {'name': backup_name,
-                'backup_type': backup_type,
-                'rotation': rotation}
-        self._action('createBackup', server, body)
 
     def set_meta(self, server, metadata):
         """

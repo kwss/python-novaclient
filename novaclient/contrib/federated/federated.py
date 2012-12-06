@@ -142,6 +142,6 @@ def getScopedToken(keystoneEndpoint, idpResponse, tenantFn):
 def swapTokens(keystoneEndpoint, unscopedToken, tenantId):
     data = {'auth' : {'token' : {'id' : unscopedToken}, 'tenantId' : tenantId}}
     data = json.dumps(data)
-    req = urllib2.Request(keystoneEndpoint + "tokens", data, {'Content-Type' : 'application/json'})
+    req = urllib2.Request(keystoneEndpoint + "/tokens", data, {'Content-Type' : 'application/json'})
     resp = urllib2.urlopen(req)
     return json.loads(resp.read())
